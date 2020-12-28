@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <Button
+        android:id="@+id/tv_sp"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:text="SP 按钮"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/tv_preferences_data_store"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:text="Preferences DataStore 按钮"
+        app:layout_constraintTop_toBottomOf="@+id/tv_sp" />
+
+    <Button
+        android:id="@+id/tv_proto_data_store"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:text="Proto DataStore 按钮"
+        app:layout_constraintTop_toBottomOf="@+id/tv_preferences_data_store" />
+
+    <Button
+        android:id="@+id/tv_sp_to_prefs_datastore"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:text="Sp To Preferences DataStore 按钮"
+        app:layout_constraintTop_toBottomOf="@+id/tv_proto_data_store" />
+
+    <Button
+        android:id="@+id/tv_sp_to_proto_datastore"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:text="Sp To Proto DataStore 按钮"
+        app:layout_constraintTop_toBottomOf="@+id/tv_sp_to_prefs_datastore" />
+
+    <TextView
+        android:id="@+id/tv_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_sp_to_proto_datastore" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

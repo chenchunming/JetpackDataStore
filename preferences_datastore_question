@@ -1,0 +1,73 @@
+
+使用DataStore，由于DataStore有两种方式，先将第一种Preferences DataStore，使用如下，在app的build.gradle文件添加如下配置
+implementation "androidx.datastore:datastore-preferences:1.0.0-alpha03"
+implementation "androidx.datastore:datastore-preferences-core:1.0.0-alpha03"
+
+# 遇到资源下载过慢
+在project的build.gradle添加阿里镜像，如下
+repositories {
+     maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+     google()
+     jcenter()
+     maven { url "https://jitpack.io" }
+     maven { url 'http://maven.aliyun.com/nexus/content/repositories/releases/' }
+}
+# 遇到异常
+Cannot inline bytecode built with JVM target 1.8 into bytecode that is being built with JVM target 1.6. Please specify proper '-jvm-target' option
+解决方案，在app的build.gradle里的android的地方添加jvm 1.8的声明如下代码
+android {
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+# 报错Duplicate class kotlinx.coroutines.AbstractCoroutine found in modules jetified-kotlinx-coroutines-core-jvm-1.3.9.jar
+解决方案是 将app的build.gradle文件里的配置改成
+implementation('androidx.datastore:datastore-preferences:1.0.0-alpha03') {
+      exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core'
+      exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core-jvm'
+}
+implementation('androidx.datastore:datastore-preferences-core:1.0.0-alpha03') {
+    exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core'
+    exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core-jvm'
+}
+
+并且添加如下携程的依赖，kotlin_coroutines是在project的build.gradle里的buildscript下添加ext.kotlin_coroutines = '1.3.9'
+// 依赖协程核心库
+implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines"
+// 依赖当前平台所对应的平台库
+implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutines"
+
+# 使用DataStore的Preferences DataStore需要在proguard-rules.pro下添加如下代码
+# datastore
+-keepclassmembers class * extends androidx.datastore.preferences.protobuf.GeneratedMessageLite {
+    <fields>;
+}
+
+#使用携程需要在proguard-rules.pro添加如下代码
+# 下面是协程添加的
+# ServiceLoader support
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepnames class kotlinx.coroutines.android.AndroidExceptionPreHandler {}
+-keepnames class kotlinx.coroutines.android.AndroidDispatcherFactory {}
+
+# Most of volatile fields are updated with AFU and should not be mangled
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
+
+# 遇到闪退的问题
+java.lang.NoClassDefFoundError: Failed resolution of: Landroidx/datastore/preferences/PreferencesProto$PreferenceMap;
+这个问题是因为androidx.datastore:datastore-preferences:1.0.0-alpha03的库，缺失这个类。
+所以改成androidx.datastore:datastore-preferences:1.0.0-alpha04
+改完之后如下
+implementation('androidx.datastore:datastore-preferences:1.0.0-alpha04') {
+    exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core'
+}
+implementation('androidx.datastore:datastore-preferences-core:1.0.0-alpha04') {
+    exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core'
+}

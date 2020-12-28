@@ -1,0 +1,116 @@
+一：添加依赖：在app的build.grale里添加如下依赖
+implementation('androidx.datastore:datastore:1.0.0-alpha04') {
+        exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core'
+        exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core-jvm'
+}
+
+implementation('androidx.datastore:datastore-core:1.0.0-alpha04') {
+        exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core-jvm'
+}
+
+因为会报Duplicate class kotlinx.coroutines.AbstractCoroutine found in modules jetified-kotlinx-coroutines-core-jvm-1.3.9.jar
+所以上面的androidx.datastore:datastore:1.0.0-alpha04 需要 exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core'
+
+二：需要下载插件，因为要支持.proto结尾的文件，需要先下载插件：
+参考地址：https://hi-dhl.com/2020/10/28/jetpack/05-probuff-AndroidStudio
+插件配置地址参考：https://github.com/google/protobuf-gradle-plugin
+注意的是需要支持grale 5.6跟java8： It requires at least Gradle 5.6 and Java 8
+
+1: 在project的build.gradle里添加 classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.14'，并添加上仓库mavenCentral()
+完整如下：
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.14'
+  }
+}
+2: 在app的build.gradle里添加 apply plugin: 'com.google.protobuf'
+3: 在app的build.gradle里添加 proto的文件位置
+// 设置 proto 文件位置
+android{
+    sourceSets {
+        main {
+            proto {
+                // proto 文件默认路径是 src/main/proto
+                // 可以通过 srcDir 修改 proto 文件的位置
+                srcDir 'src/main/proto'
+            }
+        }
+    }
+}
+4: 使用3.8.0之后的配置方式，在app的build.gradle里添加如下代码
+/**
+ * 注意配置 protoc 命令，分为不同的版本，版本不同配置的方式不同，
+ * 网上大部分都是 3.0.x ~ 3.7.x 的配置方式，关于这种配置方法，可以查看 [protobuf-gradle-plugin](https://github.com/google/protobuf-gradle-plugin)  文档，这里不在演示了，也不建议使用
+ * 在此项目中使用的是 3.8 以后 的配置的配置，
+ */
+protobuf {
+    // 设置 protoc 的版本
+    protoc {
+        // //从仓库下载 protoc 这里的版本号需要与依赖 com.google.protobuf:protobuf-javalite:xxx 版本相同
+        artifact = 'com.google.protobuf:protoc:3.10.0'
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {
+                    option "lite"
+                }
+            }
+        }
+    }
+
+    // 默认生成目录 $buildDir/generated/source/proto 通过 generatedFilesBaseDir 改变生成位置
+   //  generatedFilesBaseDir = "$projectDir/src/main"
+}
+
+dependencies {
+  // You need to depend on the lite runtime library, not protobuf-java
+  implementation 'com.google.protobuf:protobuf-javalite:3.10.0'
+}
+
+三：定义一个协议 在app/src/main/proto/ 文件夹下创建一个.proto的协议文件
+
+syntax = "proto3";
+
+option java_package = "com.example.jepcaktestapp.datastore.proto";
+option java_outer_classname = "PersonProtos";
+
+message Address{
+   string city = 1;
+}
+
+message Person {
+    // 格式：字段类型 + 字段名称 + 字段编号
+    string name = 1;
+    int32 count = 2;
+    bool flag = 3;
+    float price = 4;
+    int64 time = 5;
+    double money = 6;
+    Address address = 7;
+    enum Weekday{
+        SUN = 0;
+        MON = 1;
+        TUE = 2;
+        WED = 3;
+        THU = 4;
+        FRI = 5;
+        SAT = 6;
+    }
+    Weekday weekday = 8;
+    repeated string phone = 9;
+}
+1: syntax 声明proto的版本
+2: option java_package 生成的类的包名
+3: option java_outer_classname  生成的类的类名
+4: message 声明的是内部类, message里面的格式是 字段类型+字段名称+字段编号
+5: string 对应 Java的String， int32对应Java的int , int64对应java的long， bool对应Java的Boolean，float对应Java的float
+，double对应Java的double，repeated修饰的话表示生成一个空List集合，enum表示枚举，并且为了兼容"proto2"的语法，第一个数值必须是0
+
+四：编译
+开始编译 proto 文件，每次 proto 文件内容变更的时候，只要重新点击 Build -> Rebuild Project，即可生成对应的 Java 文件
+默认生成目录 $buildDir/generated/source/proto 通过 generatedFilesBaseDir 改变生成位置
+
